@@ -23,3 +23,13 @@ BLACK = (0, 0, 0)
 YELLOW = (255, 255, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
+
+# Maze symbols
+NODE_SYMBOL = "+"
+EMPTY_SPACE_SYMBOL = "0"
+VERTICAL_PATH_SYMBOL = "|"
+HORIZONTAL_PATH_SYMBOL = "-"
+
+# Pellets symbols
+PELLET_SYMBOL = "p"
+POWER_PELLET_SYMBOL = "P"

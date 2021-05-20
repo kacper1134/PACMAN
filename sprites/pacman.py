@@ -15,6 +15,9 @@ class Pacman:
         self.nodes = self.game.nodes
         self.node = self.nodes.nodes[0]
         self.target = self.node
+
+        self.collide_distance = 5
+
         self.set_position()
 
     def set_position(self):
@@ -55,6 +58,8 @@ class Pacman:
             if self.overshoot_target():
                 self.node = self.target
 
+                self.portal()
+
                 if self.node.neighbors[self.next_direction]:
                     self.target = self.node.neighbors[self.next_direction]
 
@@ -74,6 +79,9 @@ class Pacman:
         if self.direction is not STOP:
             if self.overshoot_target():
                 self.node = self.target
+
+                self.portal()
+
                 if self.node.neighbors[self.direction]:
                     self.target = self.node.neighbors[self.direction]
                 else:
@@ -106,3 +114,17 @@ class Pacman:
         aux = self.target
         self.target = self.node
         self.node = aux
+
+    def portal(self):
+        if self.node.portal_node:
+            self.node = self.node.portal_node
+            self.set_position()
+
+    def eat_pellet(self):
+        for pellet in self.game.pellets.pellets:
+            distance = self.position - pellet.position
+            squared_distance = distance.magnitude_squared()
+            collision_distance = (pellet.radius + self.collide_distance) ** 2
+            if squared_distance <= collision_distance:
+                return pellet
+        return None
