@@ -8,8 +8,9 @@ class Ghost(Character):
         Character.__init__(self, game)
         self.name = "Ghost"
         self.points = 200
-        self.node = self.nodes.nodes[10]
         self.previous_direction = STOP
+
+        self.goal = Vector2Dim()
 
     def update(self):
         self.position += self.direction * self.speed * self.game.dt
@@ -19,7 +20,7 @@ class Ghost(Character):
 
     def change_direction(self):
         if self.direction is STOP:
-            new_direction = self.get_random_direction()
+            new_direction = self.get_best_direction_to_goal()
 
             if new_direction:
                 self.direction = new_direction
@@ -32,7 +33,7 @@ class Ghost(Character):
             self.node = self.target
             self.set_position()
 
-            new_direction = self.get_random_direction()
+            new_direction = self.get_best_direction_to_goal()
 
             if new_direction:
                 self.direction = new_direction
@@ -41,6 +42,20 @@ class Ghost(Character):
             else:
                 self.portal()
                 self.direction = STOP
+
+    def get_best_direction_to_goal(self):
+        possible_directions = self.get_possible_directions()
+
+        distances = []
+
+        if not possible_directions:
+            return None
+
+        for direction in possible_directions:
+            distance = self.node.position + direction - self.goal
+            distances.append(distance.magnitude_squared())
+
+        return possible_directions[distances.index(min(distances))]
 
     def get_random_direction(self):
         possible_directions = self.get_possible_directions()
