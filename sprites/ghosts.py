@@ -1,6 +1,15 @@
 from sprites.character import Character
+from structures.stack import Stack
 from settings import *
 import random
+
+
+class GhostMode:
+    def __init__(self, name, time=None, mul=1, direction=None):
+        self.name = name
+        self.time = time
+        self.speed_multiplication = mul
+        self.direction = direction
 
 
 class Ghost(Character):
@@ -9,11 +18,36 @@ class Ghost(Character):
         self.name = "Ghost"
         self.points = 200
         self.previous_direction = STOP
-
         self.goal = Vector2Dim()
 
+        self.modes = self.set_up_initial_modes()
+        self.current_mode = self.modes.pop()
+        self.timer = 0
+
+    def set_up_initial_modes(self):
+        modes = Stack()
+        modes.push(GhostMode(CHASE_MODE))
+        modes.push(GhostMode(SCATTER_MODE, 5))
+        modes.push(GhostMode(CHASE_MODE, 20))
+        modes.push(GhostMode(SCATTER_MODE, 7))
+        modes.push(GhostMode(CHASE_MODE, 20))
+        modes.push(GhostMode(SCATTER_MODE, 7))
+        modes.push(GhostMode(CHASE_MODE, 20))
+        modes.push(GhostMode(SCATTER_MODE, 7))
+        return modes
+
     def update(self):
+        self.visible = True
         self.position += self.direction * self.speed * self.game.dt
+        self.timer += self.game.dt
+
+        self.change_mode()
+
+        if self.current_mode.name == SCATTER_MODE:
+            self.set_scatter_goal()
+        elif self.current_mode.name == CHASE_MODE:
+            self.set_chase_goal()
+
         self.change_direction()
         self.move_constantly()
         self.portal_slow()
@@ -42,6 +76,20 @@ class Ghost(Character):
             else:
                 self.portal()
                 self.direction = STOP
+
+    def change_mode(self):
+        if self.current_mode.time:
+            if self.timer >= self.current_mode.time:
+                self.reverse_direction()
+                self.previous_direction = self.direction
+                self.current_mode = self.modes.pop()
+                self.timer = 0
+
+    def set_scatter_goal(self):
+        self.goal = Vector2Dim(SCREEN_SIZE[0], 0)
+
+    def set_chase_goal(self):
+        self.goal = self.game.pacman.position
 
     def get_best_direction_to_goal(self):
         possible_directions = self.get_possible_directions()

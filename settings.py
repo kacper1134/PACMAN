@@ -33,3 +33,7 @@ HORIZONTAL_PATH_SYMBOL = "-"
 # Pellets symbols
 PELLET_SYMBOL = "p"
 POWER_PELLET_SYMBOL = "P"
+
+# Ghost settings
+CHASE_MODE = "CHASE"
+SCATTER_MODE = "SCATTER"
