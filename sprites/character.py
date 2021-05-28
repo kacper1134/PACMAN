@@ -8,7 +8,7 @@ class Character:
         self.game = game
         self.direction = STOP
         self.next_direction = STOP
-        self.speed = 100
+        self.speed = CHARACTER_SPEED
         self.radius = 10
         self.color = WHITE
 

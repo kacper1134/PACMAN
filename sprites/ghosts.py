@@ -5,7 +5,7 @@ import random
 
 
 class GhostMode:
-    def __init__(self, name, time=None, mul=1, direction=None):
+    def __init__(self, name, time=None, mul=1.0, direction=None):
         self.name = name
         self.time = time
         self.speed_multiplication = mul
@@ -38,15 +38,17 @@ class Ghost(Character):
 
     def update(self):
         self.visible = True
-        self.position += self.direction * self.speed * self.game.dt
+        self.position += self.direction * self.speed * self.game.dt * self.current_mode.speed_multiplication
         self.timer += self.game.dt
-
+        print(self.current_mode.name)
         self.change_mode()
 
         if self.current_mode.name == SCATTER_MODE:
             self.set_scatter_goal()
         elif self.current_mode.name == CHASE_MODE:
             self.set_chase_goal()
+        elif self.current_mode.name == FREIGHT_MODE:
+            self.set_random_goal()
 
         self.change_direction()
         self.move_constantly()
@@ -91,6 +93,24 @@ class Ghost(Character):
     def set_chase_goal(self):
         self.goal = self.game.pacman.position
 
+    def set_random_goal(self):
+        x = random.randint(0, COLS * TILE_WIDTH)
+        y = random.randint(0, ROWS * TILE_HEIGHT)
+        self.goal = Vector2Dim(x, y)
+
+    def freight_mode(self):
+        if self.current_mode.name != SPAWN_MODE:
+            if self.current_mode.name != FREIGHT_MODE:
+                if self.current_mode.time:
+                    dt = self.current_mode.time - self.timer
+                    self.modes.push(GhostMode(name=self.current_mode.name, time=dt))
+                else:
+                    self.modes.push(GhostMode(name=self.current_mode.name))
+
+            self.current_mode = GhostMode(FREIGHT_MODE, time=7, mul=0.5)
+            self.timer = 0
+            self.reverse_direction()
+
     def get_best_direction_to_goal(self):
         possible_directions = self.get_possible_directions()
 
@@ -117,7 +137,7 @@ class Ghost(Character):
                 and neighbor != self.previous_direction * -1]
 
     def portal_slow(self):
-        self.speed = 100
+        self.speed = CHARACTER_SPEED
 
         if self.node.portal_node or self.target.portal_node:
             self.speed *= 3 / 4

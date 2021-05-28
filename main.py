@@ -56,6 +56,10 @@ class Game:
         pellet = self.pacman.eat_pellet()
         if pellet:
             self.score += pellet.points
+
+            if pellet.name == "powerpellet":
+                self.ghost.freight_mode()
+
             self.pellets.pellets.remove(pellet)
 
 
