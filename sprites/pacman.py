@@ -77,8 +77,11 @@ class Pacman(Character):
                 return pellet
         return None
 
-    def eat_ghost(self, ghost):
-        distance = self.position - ghost.position
-        squared_distance = distance.magnitude_squared()
-        collide_squared_distance = (self.collide_distance + ghost.collide_distance) ** 2
-        return squared_distance <= collide_squared_distance
+    def eat_ghost(self):
+        for ghost in self.game.ghosts:
+            distance = self.position - ghost.position
+            squared_distance = distance.magnitude_squared()
+            collide_squared_distance = (self.collide_distance + ghost.collide_distance) ** 2
+            if squared_distance <= collide_squared_distance:
+                return ghost
+        return None

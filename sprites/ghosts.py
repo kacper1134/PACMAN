@@ -26,6 +26,8 @@ class Ghost(Character):
 
         self.spawn_node = self.find_spawn_node()
 
+        self.guide_directions = [UP]
+
     def set_up_initial_modes(self):
         modes = Stack()
         modes.push(GhostMode(CHASE_MODE))
@@ -39,7 +41,6 @@ class Ghost(Character):
         return modes
 
     def update(self):
-        print(self.current_mode.name)
         self.visible = True
         self.position += self.direction * self.speed * self.game.dt * self.current_mode.speed_multiplication
         self.timer += self.game.dt
@@ -87,6 +88,15 @@ class Ghost(Character):
             if self.current_mode.name == SPAWN_MODE:
                 if self.position == self.goal:
                     self.current_mode = self.modes.pop()
+                    self.direction = self.current_mode.direction
+                    self.target = self.node.neighbors[self.direction]
+                    self.set_position()
+            elif self.current_mode.name == GUIDE_MODE:
+                self.current_mode = self.modes.pop()
+                if self.current_mode.name == GUIDE_MODE:
+                    self.direction = self.current_mode.direction
+                    self.target = self.node.neighbors[self.direction]
+                    self.set_position()
 
     def change_mode(self):
         if self.current_mode.time:
@@ -111,7 +121,7 @@ class Ghost(Character):
         self.goal = self.spawn_node.position
 
     def freight_mode(self):
-        if self.current_mode.name != SPAWN_MODE:
+        if self.current_mode.name != SPAWN_MODE and self.current_mode.name != GUIDE_MODE:
             if self.current_mode.name != FREIGHT_MODE:
                 if self.current_mode.time:
                     dt = self.current_mode.time - self.timer
@@ -126,6 +136,9 @@ class Ghost(Character):
     def spawn_mode(self):
         self.current_mode = GhostMode(SPAWN_MODE, mul=1.5)
         self.timer = 0
+
+        for direction in self.guide_directions:
+            self.modes.push(GhostMode(GUIDE_MODE, mul=0.5, direction=direction))
 
     def find_spawn_node(self):
         for node in self.nodes.ghost_home_nodes:
@@ -155,11 +168,111 @@ class Ghost(Character):
         return None
 
     def get_possible_directions(self):
-        return [neighbor for neighbor in self.node.neighbors.keys() if self.node.neighbors[neighbor]
-                and neighbor != self.previous_direction * -1]
+        aux = [neighbor for neighbor in self.node.neighbors.keys() if self.node.neighbors[neighbor]
+               and neighbor != self.previous_direction * -1]
+        possible_directions = []
+
+        # Close Entrance To House For Ghost Not In Spawn Mode
+        for direction in aux:
+            if not(self.current_mode.name != SPAWN_MODE and self.node.ghost_house_entrance and direction == DOWN):
+                possible_directions.append(direction)
+
+        return possible_directions
 
     def portal_slow(self):
         self.speed = CHARACTER_SPEED
 
         if self.node.portal_node or self.target.portal_node:
             self.speed *= 3 / 4
+
+    def reverse_direction(self):
+        if self.current_mode.name != GUIDE_MODE and self.current_mode.name != SPAWN_MODE:
+            Character.reverse_direction(self)
+
+
+class Blinky(Ghost):
+    def __init__(self, game):
+        Ghost.__init__(self, game)
+        self.name = "blinky"
+        self.color = RED
+
+
+class Pinky(Ghost):
+    def __init__(self, game):
+        Ghost.__init__(self, game)
+        self.name = "pinky"
+        self.color = PINK
+
+    def set_scatter_goal(self):
+        self.goal = Vector2Dim()
+
+    def set_chase_goal(self):
+        self.goal = self.game.pacman.position + self.game.pacman.direction * TILE_WIDTH * 4
+
+
+class Inky(Ghost):
+    def __init__(self, game):
+        Ghost.__init__(self, game)
+        self.name = "inky"
+        self.color = TEAL
+
+    def set_scatter_goal(self):
+        self.goal = Vector2Dim(x=SCREEN_SIZE[0], y=SCREEN_SIZE[1])
+
+    def set_chase_goal(self):
+        pacman_future_position = self.game.pacman.position + self.game.pacman.direction * 2 * TILE_WIDTH
+        aux_vec = (pacman_future_position - self.game.ghosts.get_blinky().position) * 2
+        self.goal = self.game.ghosts.get_blinky().position + aux_vec
+
+
+class Clyde(Ghost):
+    def __init__(self, game):
+        Ghost.__init__(self, game)
+        self.name = "clyde"
+        self.color = ORANGE
+
+    def set_scatter_goal(self):
+        self.goal = Vector2Dim(x=0, y=SCREEN_SIZE[1])
+
+    def set_chase_goal(self):
+        distance = (self.game.pacman.position - self.position).magnitude_squared()
+        if distance <= (TILE_WIDTH * 8) ** 2:
+            self.set_scatter_goal()
+        else:
+            self.goal = self.game.pacman.position + self.game.pacman.direction * 4 * TILE_WIDTH
+
+
+class GhostGroup:
+    def __init__(self, game):
+        self.game = game
+        self.ghosts = [Blinky(game), Pinky(game), Inky(game), Clyde(game)]
+
+    def __iter__(self):
+        return iter(self.ghosts)
+
+    def get_blinky(self):
+        return self.ghosts[0]
+
+    def update(self):
+        for ghost in self:
+            ghost.update()
+
+    def freight_mode(self):
+        for ghost in self:
+            ghost.freight_mode()
+
+    def update_points_for_eating(self):
+        for ghost in self:
+            ghost.points *= 2
+
+    def reset_points_for_eating(self):
+        for ghost in self:
+            ghost.points = 200
+
+    def hide(self):
+        for ghost in self:
+            ghost.visible = False
+
+    def draw(self):
+        for ghost in self:
+            ghost.draw()

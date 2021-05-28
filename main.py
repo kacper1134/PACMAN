@@ -1,5 +1,5 @@
 from sprites.pacman import Pacman
-from sprites.ghosts import *
+from sprites.ghosts import GhostGroup
 from structures.nodes import *
 from structures.pellets import PelletGroup
 import os
@@ -28,12 +28,12 @@ class Game:
         self.nodes = NodeGroup(os.path.join(game_folder, "mazes", "first_maze.txt"))
         self.pellets = PelletGroup(os.path.join(game_folder, "mazes", "pellets_first_maze.txt"))
         self.pacman = Pacman(self)
-        self.ghost = Ghost(self)
+        self.ghosts = GhostGroup(self)
 
     def update(self):
         self.dt = self.clock.tick(30) / 1000
         self.pacman.update()
-        self.ghost.update()
+        self.ghosts.update()
         self.pellets.update(self.dt)
         self.check_pellets_events()
         self.check_ghost_events()
@@ -50,7 +50,7 @@ class Game:
         self.nodes.draw(self.screen)
         self.pellets.draw(self.screen)
         self.pacman.draw()
-        self.ghost.draw()
+        self.ghosts.draw()
         pg.display.update()
 
     def check_pellets_events(self):
@@ -59,14 +59,15 @@ class Game:
             self.score += pellet.points
 
             if pellet.name == "powerpellet":
-                self.ghost.freight_mode()
+                self.ghosts.freight_mode()
 
             self.pellets.pellets.remove(pellet)
 
     def check_ghost_events(self):
-        if self.pacman.eat_ghost(self.ghost):
-            if self.ghost.current_mode.name == FREIGHT_MODE:
-                self.ghost.spawn_mode()
+        ghost = self.pacman.eat_ghost()
+        if ghost:
+            if ghost.current_mode.name == FREIGHT_MODE:
+                ghost.spawn_mode()
 
 
 if __name__ == "__main__":
