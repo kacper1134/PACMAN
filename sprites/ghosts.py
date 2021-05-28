@@ -24,6 +24,8 @@ class Ghost(Character):
         self.current_mode = self.modes.pop()
         self.timer = 0
 
+        self.spawn_node = self.find_spawn_node()
+
     def set_up_initial_modes(self):
         modes = Stack()
         modes.push(GhostMode(CHASE_MODE))
@@ -37,10 +39,11 @@ class Ghost(Character):
         return modes
 
     def update(self):
+        print(self.current_mode.name)
         self.visible = True
         self.position += self.direction * self.speed * self.game.dt * self.current_mode.speed_multiplication
         self.timer += self.game.dt
-        print(self.current_mode.name)
+
         self.change_mode()
 
         if self.current_mode.name == SCATTER_MODE:
@@ -49,6 +52,8 @@ class Ghost(Character):
             self.set_chase_goal()
         elif self.current_mode.name == FREIGHT_MODE:
             self.set_random_goal()
+        elif self.current_mode.name == SPAWN_MODE:
+            self.set_spawn_goal()
 
         self.change_direction()
         self.move_constantly()
@@ -79,6 +84,10 @@ class Ghost(Character):
                 self.portal()
                 self.direction = STOP
 
+            if self.current_mode.name == SPAWN_MODE:
+                if self.position == self.goal:
+                    self.current_mode = self.modes.pop()
+
     def change_mode(self):
         if self.current_mode.time:
             if self.timer >= self.current_mode.time:
@@ -98,6 +107,9 @@ class Ghost(Character):
         y = random.randint(0, ROWS * TILE_HEIGHT)
         self.goal = Vector2Dim(x, y)
 
+    def set_spawn_goal(self):
+        self.goal = self.spawn_node.position
+
     def freight_mode(self):
         if self.current_mode.name != SPAWN_MODE:
             if self.current_mode.name != FREIGHT_MODE:
@@ -110,6 +122,16 @@ class Ghost(Character):
             self.current_mode = GhostMode(FREIGHT_MODE, time=7, mul=0.5)
             self.timer = 0
             self.reverse_direction()
+
+    def spawn_mode(self):
+        self.current_mode = GhostMode(SPAWN_MODE, mul=1.5)
+        self.timer = 0
+
+    def find_spawn_node(self):
+        for node in self.nodes.ghost_home_nodes:
+            if node.ghost_spawn:
+                return node
+        return None
 
     def get_best_direction_to_goal(self):
         possible_directions = self.get_possible_directions()

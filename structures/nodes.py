@@ -14,6 +14,7 @@ class Node:
 
         self.ghost_house_guide = False
         self.ghost_house_entrance = False
+        self.ghost_spawn = False
 
     def draw(self, screen):
         for neighbor in self.neighbors.keys():
@@ -35,7 +36,7 @@ class NodeGroup:
 
         self.stack_of_nodes = Stack()
         self.portal_symbols = ["1"]
-        self.node_symbols = [NODE_SYMBOL, HOUSE_SYMBOL] + self.portal_symbols
+        self.node_symbols = [NODE_SYMBOL, HOUSE_SYMBOL, GHOST_SPAWN_SYMBOL] + self.portal_symbols
 
         self.create_node_list(self.grid, self.nodes)
         self.create_node_list(self.ghost_house_grid, self.ghost_home_nodes)
@@ -144,6 +145,9 @@ class NodeGroup:
 
             if grid[row][col] == HOUSE_SYMBOL:
                 node.ghost_house_guide = True
+
+            if grid[row][col] == GHOST_SPAWN_SYMBOL:
+                node.ghost_spawn = True
 
             if grid[row][col] in self.portal_symbols:
                 node.portal_val = grid[row][col]

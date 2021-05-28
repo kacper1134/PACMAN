@@ -36,6 +36,7 @@ class Game:
         self.ghost.update()
         self.pellets.update(self.dt)
         self.check_pellets_events()
+        self.check_ghost_events()
         self.events()
         self.draw()
 
@@ -61,6 +62,11 @@ class Game:
                 self.ghost.freight_mode()
 
             self.pellets.pellets.remove(pellet)
+
+    def check_ghost_events(self):
+        if self.pacman.eat_ghost(self.ghost):
+            if self.ghost.current_mode.name == FREIGHT_MODE:
+                self.ghost.spawn_mode()
 
 
 if __name__ == "__main__":
