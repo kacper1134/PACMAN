@@ -47,11 +47,18 @@ class Pacman(Character):
                 self.portal()
 
                 if self.node.neighbors[self.next_direction]:
-                    self.target = self.node.neighbors[self.next_direction]
+                    if self.node.ghost_house_entrance:  # Ghost House Entrance
+                        if self.node.neighbors[self.direction]:
+                            self.target = self.node.neighbors[self.direction]
+                        else:
+                            self.set_position()
+                            self.direction = STOP
+                    else:  # "Normal" Node
+                        self.target = self.node.neighbors[self.next_direction]
 
-                    if self.direction != self.next_direction:
-                        self.set_position()
-                        self.direction = self.next_direction
+                        if self.direction != self.next_direction:
+                            self.set_position()
+                            self.direction = self.next_direction
                         self.next_direction = STOP
 
                 else:
