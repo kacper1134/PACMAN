@@ -28,6 +28,10 @@ class Ghost(Character):
 
         self.guide_directions = [UP]
 
+        self.pellets_needed_for_release = 0
+        self.released_from_house = True
+        self.banned_directions = []
+
     def set_up_initial_modes(self):
         modes = Stack()
         modes.push(GhostMode(CHASE_MODE))
@@ -39,6 +43,20 @@ class Ghost(Character):
         modes.push(GhostMode(CHASE_MODE, 20))
         modes.push(GhostMode(SCATTER_MODE, 7))
         return modes
+
+    def set_start_position(self, ghost_name):
+        self.node = self.find_start_node(ghost_name)
+        self.target = self.node
+        self.set_position()
+
+    def find_start_node(self, ghost_name):
+        for node in self.game.nodes.nodes:
+            if (node.blinky_start_position and ghost_name == "blinky") or \
+                    (node.inky_start_position and ghost_name == "inky") or \
+                    (node.pinky_start_position and ghost_name == "pinky") or \
+                    (node.clyde_start_position and ghost_name == "clyde"):
+                return node
+        return None
 
     def update(self):
         self.visible = True
@@ -99,7 +117,9 @@ class Ghost(Character):
                     self.set_position()
 
     def change_mode(self):
-        if self.current_mode.time:
+        if not self.released_from_house:
+            self.timer = 0
+        elif self.current_mode.time:
             if self.timer >= self.current_mode.time:
                 self.reverse_direction()
                 self.previous_direction = self.direction
@@ -175,7 +195,8 @@ class Ghost(Character):
         # Close Entrance To House For Ghost Not In Spawn Mode
         for direction in aux:
             if not(self.current_mode.name != SPAWN_MODE and self.node.ghost_house_entrance and direction == DOWN):
-                possible_directions.append(direction)
+                if direction not in self.banned_directions:
+                    possible_directions.append(direction)
 
         return possible_directions
 
@@ -195,6 +216,7 @@ class Blinky(Ghost):
         Ghost.__init__(self, game)
         self.name = "blinky"
         self.color = RED
+        self.set_start_position(self.name)
 
 
 class Pinky(Ghost):
@@ -202,6 +224,7 @@ class Pinky(Ghost):
         Ghost.__init__(self, game)
         self.name = "pinky"
         self.color = PINK
+        self.set_start_position(self.name)
 
     def set_scatter_goal(self):
         self.goal = Vector2Dim()
@@ -215,6 +238,13 @@ class Inky(Ghost):
         Ghost.__init__(self, game)
         self.name = "inky"
         self.color = TEAL
+        self.set_start_position(self.name)
+
+        self.banned_directions = [RIGHT]
+        self.pellets_needed_for_release = 30
+        self.released_from_house = False
+        self.guide_directions += [RIGHT]
+        self.spawn_node = self.node
 
     def set_scatter_goal(self):
         self.goal = Vector2Dim(x=SCREEN_SIZE[0], y=SCREEN_SIZE[1])
@@ -230,6 +260,13 @@ class Clyde(Ghost):
         Ghost.__init__(self, game)
         self.name = "clyde"
         self.color = ORANGE
+        self.set_start_position(self.name)
+
+        self.banned_directions = [LEFT]
+        self.pellets_needed_for_release = 60
+        self.released_from_house = False
+        self.guide_directions += [LEFT]
+        self.spawn_node = self.node
 
     def set_scatter_goal(self):
         self.goal = Vector2Dim(x=0, y=SCREEN_SIZE[1])
@@ -259,7 +296,8 @@ class GhostGroup:
 
     def freight_mode(self):
         for ghost in self:
-            ghost.freight_mode()
+            if ghost.released_from_house:
+                ghost.freight_mode()
 
     def update_points_for_eating(self):
         for ghost in self:
@@ -272,6 +310,13 @@ class GhostGroup:
     def hide(self):
         for ghost in self:
             ghost.visible = False
+
+    def release_from_home(self):
+        for ghost in self:
+            if not ghost.released_from_house and ghost.pellets_needed_for_release <= self.game.eaten_pellets:
+                ghost.released_from_house = True
+                ghost.banned_directions = []
+                ghost.spawn_mode()
 
     def draw(self):
         for ghost in self:

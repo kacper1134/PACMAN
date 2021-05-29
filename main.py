@@ -19,6 +19,8 @@ class Game:
         self.pacman = None
         self.nodes = None
 
+        self.eaten_pellets = 0
+
     def set_background(self):
         self.background = pg.surface.Surface(SCREEN_SIZE).convert()
         self.background.fill(BLACK)
@@ -31,6 +33,7 @@ class Game:
         self.ghosts = GhostGroup(self)
 
     def update(self):
+        print(self.eaten_pellets)
         self.dt = self.clock.tick(30) / 1000
         self.pacman.update()
         self.ghosts.update()
@@ -57,6 +60,7 @@ class Game:
         pellet = self.pacman.eat_pellet()
         if pellet:
             self.score += pellet.points
+            self.eaten_pellets += 1
 
             if pellet.name == "powerpellet":
                 self.ghosts.freight_mode()
@@ -64,6 +68,7 @@ class Game:
             self.pellets.pellets.remove(pellet)
 
     def check_ghost_events(self):
+        self.ghosts.release_from_home()
         ghost = self.pacman.eat_ghost()
         if ghost:
             if ghost.current_mode.name == FREIGHT_MODE:
