@@ -24,6 +24,7 @@ class Pacman(Character):
         self.position.x -= (self.node.position.x - self.target.position.x) // 2
 
     def update(self):
+        self.visible = True
         self.position += self.direction * self.speed * self.game.dt
         self.get_next_direction()
 
@@ -99,3 +100,12 @@ class Pacman(Character):
             if squared_distance <= collide_squared_distance:
                 return ghost
         return None
+
+    def eat_fruit(self):
+        if self.game.fruit:
+            distance = self.position - self.game.fruit.position
+            squared_distance = distance.magnitude_squared()
+            collide_squared_distance = (self.collide_distance + self.game.fruit.collide_distance) ** 2
+            if squared_distance <= collide_squared_distance:
+                return True
+        return False

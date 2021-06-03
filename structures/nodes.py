@@ -22,6 +22,8 @@ class Node:
         self.pinky_start_position = False
         self.clyde_start_position = False
 
+        self.fruit_start_position = False
+
     def draw(self, screen):
         for neighbor in self.neighbors.keys():
             if self.neighbors[neighbor]:
@@ -43,7 +45,7 @@ class NodeGroup:
         self.stack_of_nodes = Stack()
         self.portal_symbols = ["1"]
         self.node_symbols = [NODE_SYMBOL, HOUSE_SYMBOL, GHOST_SPAWN_SYMBOL, PACMAN_START_NODE,
-                             BLINKY_START_NODE, INKY_START_NODE, CLYDE_START_NODE] + self.portal_symbols
+                             BLINKY_START_NODE, INKY_START_NODE, CLYDE_START_NODE, FRUIT_SYMBOL] + self.portal_symbols
 
         self.create_node_list(self.grid, self.nodes)
         self.create_node_list(self.ghost_house_grid, self.ghost_home_nodes)
@@ -168,6 +170,9 @@ class NodeGroup:
 
             if grid[row][col] == PACMAN_START_NODE:
                 node.pacman_start_position = True
+
+            if grid[row][col] == FRUIT_SYMBOL:
+                node.fruit_start_position = True
 
             if grid[row][col] in self.portal_symbols:
                 node.portal_val = grid[row][col]

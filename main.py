@@ -2,6 +2,8 @@ from sprites.pacman import Pacman
 from sprites.ghosts import GhostGroup
 from structures.nodes import *
 from structures.pellets import PelletGroup
+from sprites.fruits import Fruit
+from pause import Pause
 import os
 
 
@@ -18,8 +20,11 @@ class Game:
 
         self.pacman = None
         self.nodes = None
+        self.fruit = None
 
         self.eaten_pellets = 0
+
+        self.pause = Pause(self, True)
 
     def set_background(self):
         self.background = pg.surface.Surface(SCREEN_SIZE).convert()
@@ -33,13 +38,21 @@ class Game:
         self.ghosts = GhostGroup(self)
 
     def update(self):
-        print(self.eaten_pellets)
         self.dt = self.clock.tick(30) / 1000
-        self.pacman.update()
-        self.ghosts.update()
+
+        if not self.pause.paused:
+            self.pacman.update()
+            self.ghosts.update()
+
+            if self.fruit:
+                self.fruit.update()
+
+            self.check_ghost_events()
+            self.check_fruit_events()
+
         self.pellets.update(self.dt)
         self.check_pellets_events()
-        self.check_ghost_events()
+        self.pause.update()
         self.events()
         self.draw()
 
@@ -47,6 +60,8 @@ class Game:
         for event in pg.event.get():
             if event.type == pg.QUIT or (event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE):
                 exit()
+            if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
+                self.pause.change_player_pause()
 
     def draw(self):
         self.screen.blit(self.background, (0, 0))
@@ -54,6 +69,10 @@ class Game:
         self.pellets.draw(self.screen)
         self.pacman.draw()
         self.ghosts.draw()
+
+        if self.fruit:
+            self.fruit.draw()
+
         pg.display.update()
 
     def check_pellets_events(self):
@@ -61,6 +80,9 @@ class Game:
         if pellet:
             self.score += pellet.points
             self.eaten_pellets += 1
+
+            if self.eaten_pellets == 70 or self.eaten_pellets == 140:
+                self.fruit = Fruit(self)
 
             if pellet.name == "powerpellet":
                 self.ghosts.freight_mode()
@@ -73,6 +95,23 @@ class Game:
         if ghost:
             if ghost.current_mode.name == FREIGHT_MODE:
                 ghost.spawn_mode()
+                self.pause.start_timer(1, PAUSE_GHOST)
+                self.pacman.visible = False
+                ghost.visible = False
+
+    def check_fruit_events(self):
+        if self.fruit:
+            if self.pacman.eat_fruit():
+                self.score += self.fruit.points
+                self.fruit = None
+            elif self.fruit.remove:
+                self.fruit = None
+
+    def resolve_death(self):
+        pass
+
+    def resolve_level_clear(self):
+        pass
 
 
 if __name__ == "__main__":
