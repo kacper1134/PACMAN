@@ -10,11 +10,8 @@ class Pacman(Character):
         self.color = YELLOW
         self.set_start_position()
 
-    def find_start_node(self):
-        for node in self.game.nodes.nodes:
-            if node.pacman_start_position:
-                return node
-        return None
+    def reset(self):
+        self.set_start_position()
 
     def set_start_position(self):
         self.node = self.find_start_node()
@@ -22,6 +19,12 @@ class Pacman(Character):
         self.target = self.node.neighbors[self.direction]
         self.set_position()
         self.position.x -= (self.node.position.x - self.target.position.x) // 2
+
+    def find_start_node(self):
+        for node in self.game.nodes.nodes:
+            if node.pacman_start_position:
+                return node
+        return None
 
     def update(self):
         self.visible = True

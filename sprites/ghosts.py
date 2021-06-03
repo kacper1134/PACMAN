@@ -201,7 +201,7 @@ class Ghost(Character):
         return possible_directions
 
     def portal_slow(self):
-        self.speed = CHARACTER_SPEED
+        self.speed = CHARACTER_SPEED * self.game.game_speed
 
         if self.node.portal_node or self.target.portal_node:
             self.speed *= 3 / 4

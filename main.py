@@ -4,6 +4,7 @@ from structures.nodes import *
 from structures.pellets import PelletGroup
 from sprites.fruits import Fruit
 from pause import Pause
+from levels import LevelManager
 import os
 
 
@@ -25,17 +26,43 @@ class Game:
         self.eaten_pellets = 0
 
         self.pause = Pause(self, True)
+        self.level_manager = LevelManager()
+
+        self.game_speed = 1.0
 
     def set_background(self):
         self.background = pg.surface.Surface(SCREEN_SIZE).convert()
         self.background.fill(BLACK)
 
     def start(self):
+        self.level_manager.reset_game()
+        maze_map = self.level_manager.get_level_map()
+
         game_folder = os.path.dirname(__file__)
-        self.nodes = NodeGroup(os.path.join(game_folder, "mazes", "first_maze.txt"))
-        self.pellets = PelletGroup(os.path.join(game_folder, "mazes", "pellets_first_maze.txt"))
+        self.nodes = NodeGroup(os.path.join(game_folder, "mazes", maze_map["maze_name"]))
+        self.pellets = PelletGroup(os.path.join(game_folder, "mazes", maze_map["pellet_name"]))
         self.pacman = Pacman(self)
         self.ghosts = GhostGroup(self)
+
+        self.eaten_pellets = 0
+        self.fruit = None
+        self.pause.force_pause(True)
+
+    def start_new_level(self):
+        level_map = self.level_manager.get_level_map()
+        self.set_background()
+
+        game_folder = os.path.dirname(__file__)
+        self.nodes = NodeGroup(os.path.join(game_folder, "mazes", level_map["maze_name"]))
+        self.pellets = PelletGroup(os.path.join(game_folder, "mazes", level_map["pellet_name"]))
+
+        self.pacman.nodes = self.nodes
+        self.pacman.reset()
+        self.ghosts = GhostGroup(self)
+
+        self.eaten_pellets = 0
+        self.fruit = None
+        self.pause.force_pause(True)
 
     def update(self):
         self.dt = self.clock.tick(30) / 1000
@@ -46,6 +73,9 @@ class Game:
 
             if self.fruit:
                 self.fruit.update()
+
+            if self.pause.pause_type:
+                self.pause.settle_pause()
 
             self.check_ghost_events()
             self.check_fruit_events()
@@ -89,6 +119,11 @@ class Game:
 
             self.pellets.pellets.remove(pellet)
 
+            if self.pellets.empty():
+                self.pacman.visible = False
+                self.ghosts.hide()
+                self.pause.start_timer(3, PAUSE_CLEAR)
+
     def check_ghost_events(self):
         self.ghosts.release_from_home()
         ghost = self.pacman.eat_ghost()
@@ -111,7 +146,11 @@ class Game:
         pass
 
     def resolve_level_clear(self):
-        pass
+        self.level_manager.next_level()
+        self.start_new_level()
+        self.pause.pause_type = None
+        self.game_speed = min(self.game_speed * NEXT_LEVEL_SPEED_MULTIPLICATION, MAXIMUM_CHARACTER_SPEED)
+        self.pacman.speed *= self.game_speed
 
 
 if __name__ == "__main__":

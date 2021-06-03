@@ -17,7 +17,11 @@ DOWN = Vector2Dim(y=1)
 LEFT = Vector2Dim(x=-1)
 RIGHT = Vector2Dim(x=1)
 STOP = Vector2Dim()
+
 CHARACTER_SPEED = 100
+MAXIMUM_CHARACTER_SPEED = 200
+NEXT_LEVEL_SPEED_MULTIPLICATION = 1.02
+
 
 # Colors
 BLACK = (0, 0, 0)
