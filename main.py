@@ -48,6 +48,8 @@ class Game:
         self.fruit = None
         self.pause.force_pause(True)
 
+        self.game_over = False
+
     def start_new_level(self):
         level_map = self.level_manager.get_level_map()
         self.set_background()
@@ -64,25 +66,32 @@ class Game:
         self.fruit = None
         self.pause.force_pause(True)
 
+    def reset_level_after_pacman_dies(self):
+        self.pacman.reset()
+        self.ghosts = GhostGroup(self)
+        self.fruit = None
+        self.pause.force_pause(True)
+
     def update(self):
-        self.dt = self.clock.tick(30) / 1000
+        if not self.game_over:
+            self.dt = self.clock.tick(FPS) / 1000
 
-        if not self.pause.paused:
-            self.pacman.update()
-            self.ghosts.update()
-
-            if self.fruit:
-                self.fruit.update()
-
-            if self.pause.pause_type:
+            if (self.pause.pause_type == PAUSE_CLEAR or self.pause.pause_type == PAUSE_DIE) and not self.pause.paused:
                 self.pause.settle_pause()
+            elif not self.pause.paused:
+                self.pacman.update()
+                self.ghosts.update()
 
-            self.check_ghost_events()
-            self.check_fruit_events()
+                if self.fruit:
+                    self.fruit.update()
 
-        self.pellets.update(self.dt)
-        self.check_pellets_events()
-        self.pause.update()
+                self.check_pellets_events()
+                self.check_ghost_events()
+                self.check_fruit_events()
+
+            self.pause.update()
+            self.pellets.update(self.dt)
+
         self.events()
         self.draw()
 
@@ -91,7 +100,10 @@ class Game:
             if event.type == pg.QUIT or (event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE):
                 exit()
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
-                self.pause.change_player_pause()
+                if self.game_over:
+                    self.start()
+                else:
+                    self.pause.change_player_pause()
 
     def draw(self):
         self.screen.blit(self.background, (0, 0))
@@ -102,6 +114,8 @@ class Game:
 
         if self.fruit:
             self.fruit.draw()
+
+        self.pacman.draw_lives()
 
         pg.display.update()
 
@@ -133,6 +147,10 @@ class Game:
                 self.pause.start_timer(1, PAUSE_GHOST)
                 self.pacman.visible = False
                 ghost.visible = False
+            elif ghost.current_mode.name == SCATTER_MODE or ghost.current_mode.name == CHASE_MODE:
+                self.pacman.lose_live()
+                self.ghosts.hide()
+                self.pause.start_timer(3, PAUSE_DIE)
 
     def check_fruit_events(self):
         if self.fruit:
@@ -143,7 +161,11 @@ class Game:
                 self.fruit = None
 
     def resolve_death(self):
-        pass
+        if self.pacman.lives == 0:
+            self.game_over = True
+        else:
+            self.reset_level_after_pacman_dies()
+        self.pause.pause_type = None
 
     def resolve_level_clear(self):
         self.level_manager.next_level()

@@ -11,6 +11,8 @@ WIDTH = COLS * TILE_SIZE
 HEIGHT = ROWS * TILE_SIZE
 SCREEN_SIZE = (WIDTH, HEIGHT)
 
+FPS = 120
+
 # Movement
 UP = Vector2Dim(y=-1)
 DOWN = Vector2Dim(y=1)

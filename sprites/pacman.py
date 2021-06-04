@@ -8,9 +8,13 @@ class Pacman(Character):
         Character.__init__(self, game)
         self.name = "pacman"
         self.color = YELLOW
+        self.lives = 5
         self.set_start_position()
 
     def reset(self):
+        self.direction = LEFT
+        self.next_direction = STOP
+        self.visible = True
         self.set_start_position()
 
     def set_start_position(self):
@@ -112,3 +116,14 @@ class Pacman(Character):
             if squared_distance <= collide_squared_distance:
                 return True
         return False
+
+    def lose_live(self):
+        self.lives -= 1
+        self.direction = STOP
+        self.next_direction = STOP
+
+    def draw_lives(self):
+        for i in range(self.lives - 1):
+            x_position = 5 + self.radius + (2 * self.radius + 5) * i
+            y_position = TILE_WIDTH * (ROWS - 1)
+            pg.draw.circle(self.game.screen, self.color, (x_position, y_position), self.radius)
