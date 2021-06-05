@@ -2,6 +2,8 @@ from sprites.pacman import Pacman
 from sprites.ghosts import GhostGroup
 from structures.nodes import *
 from structures.pellets import PelletGroup
+from structures.text import TextGroup
+
 from sprites.fruits import Fruit
 from pause import Pause
 from levels import LevelManager
@@ -27,6 +29,7 @@ class Game:
 
         self.pause = Pause(self, True)
         self.level_manager = LevelManager()
+        self.text_manager = TextGroup(self)
 
         self.game_speed = 1.0
 
@@ -47,8 +50,11 @@ class Game:
         self.eaten_pellets = 0
         self.fruit = None
         self.pause.force_pause(True)
-
         self.game_over = False
+
+        self.score = 0
+        self.text_manager.show_ready_text()
+        self.text_manager.update_level(self.level_manager.level + 1)
 
     def start_new_level(self):
         level_map = self.level_manager.get_level_map()
@@ -66,11 +72,14 @@ class Game:
         self.fruit = None
         self.pause.force_pause(True)
 
+        self.text_manager.update_level(self.level_manager.level + 1)
+
     def reset_level_after_pacman_dies(self):
         self.pacman.reset()
         self.ghosts = GhostGroup(self)
         self.fruit = None
         self.pause.force_pause(True)
+        self.text_manager.show_ready_text()
 
     def update(self):
         if not self.game_over:
@@ -89,9 +98,14 @@ class Game:
                 self.check_ghost_events()
                 self.check_fruit_events()
 
+                if self.pacman.lives == 0:
+                    self.text_manager.show_game_over_text()
+
+            self.text_manager.update()
             self.pause.update()
             self.pellets.update(self.dt)
 
+        self.text_manager.update_score(self.score)
         self.events()
         self.draw()
 
@@ -103,7 +117,12 @@ class Game:
                 if self.game_over:
                     self.start()
                 else:
-                    self.pause.change_player_pause()
+                    if self.pacman.lives != 0:
+                        self.pause.change_player_pause()
+                        if self.pause.paused:
+                            self.text_manager.show_paused_text()
+                        else:
+                            self.text_manager.hide_all_messages()
 
     def draw(self):
         self.screen.blit(self.background, (0, 0))
@@ -111,6 +130,7 @@ class Game:
         self.pellets.draw(self.screen)
         self.pacman.draw()
         self.ghosts.draw()
+        self.text_manager.draw()
 
         if self.fruit:
             self.fruit.draw()
@@ -129,6 +149,7 @@ class Game:
                 self.fruit = Fruit(self)
 
             if pellet.name == "powerpellet":
+                self.ghosts.reset_points_for_eating()
                 self.ghosts.freight_mode()
 
             self.pellets.pellets.remove(pellet)
@@ -143,6 +164,10 @@ class Game:
         ghost = self.pacman.eat_ghost()
         if ghost:
             if ghost.current_mode.name == FREIGHT_MODE:
+                self.score += ghost.points
+                self.text_manager.create_temp_text(ghost.points, ghost.position)
+                self.ghosts.update_points_for_eating()
+
                 ghost.spawn_mode()
                 self.pause.start_timer(1, PAUSE_GHOST)
                 self.pacman.visible = False
@@ -156,6 +181,7 @@ class Game:
         if self.fruit:
             if self.pacman.eat_fruit():
                 self.score += self.fruit.points
+                self.text_manager.create_temp_text(self.fruit.points, self.fruit.position)
                 self.fruit = None
             elif self.fruit.remove:
                 self.fruit = None
@@ -163,6 +189,7 @@ class Game:
     def resolve_death(self):
         if self.pacman.lives == 0:
             self.game_over = True
+            self.text_manager.show_game_over_text()
         else:
             self.reset_level_after_pacman_dies()
         self.pause.pause_type = None

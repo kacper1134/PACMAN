@@ -1,4 +1,5 @@
 from structures.vector import Vector2Dim
+import os
 
 # Game Basic Settings
 TILE_SIZE = 16
@@ -72,3 +73,10 @@ GHOST_HOUSE = [[EMPTY_SPACE_SYMBOL, EMPTY_SPACE_SYMBOL, BLINKY_START_NODE, EMPTY
 PAUSE_CLEAR = "clear pause"
 PAUSE_DIE = "die pause"
 PAUSE_GHOST = "ghost pause"
+
+# Font directory
+FONT_DIRECTORY = os.path.join(os.path.dirname(__file__), "fonts")
+FONT_FILE = "PressStart2P-Regular.ttf"
+
+# Fonts
+FONT_SIZE = 16
