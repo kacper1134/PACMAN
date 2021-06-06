@@ -37,6 +37,8 @@ PINK = (255, 100, 150)
 TEAL = (100, 255, 255)
 ORANGE = (230, 190, 40)
 
+TRANSPARENT_COLOR = (255, 0, 255)
+
 # Maze symbols
 NODE_SYMBOL = "+"
 EMPTY_SPACE_SYMBOL = "0"
@@ -80,3 +82,21 @@ FONT_FILE = "PressStart2P-Regular.ttf"
 
 # Fonts
 FONT_SIZE = 16
+
+# Image directory
+IMAGE_DIRECTORY = os.path.join(os.path.dirname(__file__), "img")
+SPRITE_SHEET_FILE = "spritesheet.png"
+
+# Images
+IMAGE_SIZE = 32
+
+# Animation
+PACMAN_ANIMATION_SPEED = 15
+GHOST_ANIMATION_SPEED = 10
+LOOP_ANIMATION_TYPE = "loop"
+ONCE_ANIMATION_TYPE = "once"
+STATIC_ANIMATION_TYPE = "static"
+
+# Maze
+NUMBER_OF_MAZE_FRAGMENTS = 11
+MAZE_DIRECTORY = os.path.join(os.path.dirname(__file__), "mazes")

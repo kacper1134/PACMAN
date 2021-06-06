@@ -1,4 +1,5 @@
 from sprites.character import Character
+from structures.animation import Animation
 from settings import *
 import pygame as pg
 
@@ -9,13 +10,26 @@ class Pacman(Character):
         self.name = "pacman"
         self.color = YELLOW
         self.lives = 5
+
+        self.start_image = self.sprite_sheet.get_image_from_sheet(0, 1, IMAGE_SIZE, IMAGE_SIZE)
+        self.image = self.start_image
+        self.life_icon = self.image
+
+        self.animation = None
+        self.animations = {}
+        self.define_animations()
         self.set_start_position()
+
+        self.death_animation = False
 
     def reset(self):
         self.direction = LEFT
         self.next_direction = STOP
         self.visible = True
         self.set_start_position()
+        self.image = self.start_image
+        self.animations["death"].reset_animation()
+        self.death_animation = False
 
     def set_start_position(self):
         self.node = self.find_start_node()
@@ -33,6 +47,7 @@ class Pacman(Character):
     def update(self):
         self.visible = True
         self.position += self.direction * self.speed * self.game.dt
+        self.update_animation()
         self.get_next_direction()
 
         if self.next_direction is not STOP:
@@ -119,11 +134,59 @@ class Pacman(Character):
 
     def lose_live(self):
         self.lives -= 1
+        self.animation = self.animations["death"]
+        self.death_animation = True
         self.direction = STOP
         self.next_direction = STOP
 
     def draw_lives(self):
         for i in range(self.lives - 1):
-            x_position = 5 + self.radius + (2 * self.radius + 5) * i
-            y_position = TILE_WIDTH * (ROWS - 1)
-            pg.draw.circle(self.game.screen, self.color, (x_position, y_position), self.radius)
+            x_position = 10 + 42 * i
+            y_position = TILE_WIDTH * ROWS - 32
+            self.game.screen.blit(self.life_icon, (x_position, y_position))
+
+    def update_animation(self):
+        if self.direction == UP:
+            self.animation = self.animations["up"]
+        elif self.direction == DOWN:
+            self.animation = self.animations["down"]
+        elif self.direction == LEFT:
+            self.animation = self.animations["left"]
+        elif self.direction == RIGHT:
+            self.animation = self.animations["right"]
+        elif self.direction == STOP:
+            self.animation = self.animations["idle"]
+
+        self.image = self.animation.update()
+
+    def update_death(self):
+        self.image = self.animation.update()
+
+    def define_animations(self):
+        directions = ["left", "right", "down", "up"]
+        for image_number, direction in enumerate(directions):
+            self.create_move_animation(direction, image_number)
+
+        self.create_death_animation()
+        self.create_idle_animation()
+
+    def create_move_animation(self, direction, image_number):
+        animation = Animation(self.game, LOOP_ANIMATION_TYPE)
+        animation.animation_speed = PACMAN_ANIMATION_SPEED
+        animation.add_frame(self.sprite_sheet.get_image_from_sheet(4, 0, IMAGE_SIZE, IMAGE_SIZE))
+        animation.add_frame(self.sprite_sheet.get_image_from_sheet(image_number, 0, IMAGE_SIZE, IMAGE_SIZE))
+        animation.add_frame(self.sprite_sheet.get_image_from_sheet(image_number, 1, IMAGE_SIZE, IMAGE_SIZE))
+        animation.add_frame(self.sprite_sheet.get_image_from_sheet(image_number, 0, IMAGE_SIZE, IMAGE_SIZE))
+        self.animations[direction] = animation
+
+    def create_death_animation(self):
+        animation = Animation(self.game, ONCE_ANIMATION_TYPE)
+        animation.animation_speed = PACMAN_ANIMATION_SPEED // 3
+        for i in range(11):
+            animation.add_frame(self.sprite_sheet.get_image_from_sheet(i, 7, IMAGE_SIZE, IMAGE_SIZE))
+        self.animations["death"] = animation
+
+    def create_idle_animation(self):
+        animation = Animation(self.game, STATIC_ANIMATION_TYPE)
+        animation.add_frame(self.sprite_sheet.get_image_from_sheet(4, 0, IMAGE_SIZE, IMAGE_SIZE))
+        self.animations["idle"] = animation

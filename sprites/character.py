@@ -20,6 +20,9 @@ class Character:
 
         self.visible = True
 
+        self.image = None
+        self.sprite_sheet = self.game.sprite_sheet
+
         self.set_position()
 
     def set_position(self):
@@ -31,8 +34,13 @@ class Character:
 
     def draw(self):
         if self.visible:
-            pos = self.position.to_int()
-            pg.draw.circle(self.game.screen, self.color, pos, self.radius)
+            if self.image is not None:
+                pos = self.position.to_tuple()
+                pos = (pos[0] - TILE_WIDTH // 2, pos[1] - TILE_HEIGHT // 2)
+                self.game.screen.blit(self.image, pos)
+            else:
+                pos = self.position.to_int()
+                pg.draw.circle(self.game.screen, self.color, pos, self.radius)
 
     def overshoot_target(self):
         if self.target:

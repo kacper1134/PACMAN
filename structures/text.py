@@ -52,9 +52,9 @@ class TextGroup:
         self.texts["level_label"] = Text(self.game, "LEVEL", WHITE, 368, 5, FONT_SIZE)
         self.texts["score"] = Text(self.game, "0".zfill(8), WHITE, 0, 21, FONT_SIZE)
         self.texts["level"] = Text(self.game, "0".zfill(3), WHITE, 368, 21, FONT_SIZE)
-        self.texts["ready"] = Text(self.game, "READY!", YELLOW, 175, 330, FONT_SIZE, False)
-        self.texts["paused"] = Text(self.game, "PAUSED!", YELLOW, 165, 330, FONT_SIZE, False)
-        self.texts["game_over"] = Text(self.game, "GAMEOVER!", RED, 150, 330, FONT_SIZE, False)
+        self.texts["ready"] = Text(self.game, "READY!", YELLOW, 180, 320, FONT_SIZE, False)
+        self.texts["paused"] = Text(self.game, "PAUSED!", YELLOW, 170, 320, FONT_SIZE, False)
+        self.texts["game_over"] = Text(self.game, "GAMEOVER!", RED, 160, 320, FONT_SIZE, False)
 
     def update_score(self, new_score):
         self.texts["score"].change_text(str(new_score).zfill(8))

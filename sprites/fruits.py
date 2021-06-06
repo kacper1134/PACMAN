@@ -7,6 +7,7 @@ class Fruit(Character):
         Character.__init__(self, game)
         self.name = "fruit"
         self.color = GREEN
+        self.image = self.image = self.sprite_sheet.get_image_from_sheet(8, 2, IMAGE_SIZE, IMAGE_SIZE)
         self.set_start_position()
         self.life_span_seconds = 5
         self.timer = 0

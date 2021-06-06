@@ -8,13 +8,14 @@ class Pellet:
         self.name = "pellet"
         self.position = Vector2Dim(x, y)
         self.color = WHITE
-        self.radius = 4
+        self.radius = 2
         self.points = 10
         self.visible = True
 
     def draw(self, screen):
         if self.visible:
             position = self.position.to_int()
+            position = (position[0] + TILE_WIDTH // 2, position[1] + TILE_HEIGHT // 2)
             pg.draw.circle(screen, self.color, position, self.radius)
 
 

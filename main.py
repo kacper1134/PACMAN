@@ -3,6 +3,8 @@ from sprites.ghosts import GhostGroup
 from structures.nodes import *
 from structures.pellets import PelletGroup
 from structures.text import TextGroup
+from structures.sprite import SpriteSheet
+from structures.maze import Maze
 
 from sprites.fruits import Fruit
 from pause import Pause
@@ -30,6 +32,8 @@ class Game:
         self.pause = Pause(self, True)
         self.level_manager = LevelManager()
         self.text_manager = TextGroup(self)
+        self.sprite_sheet = SpriteSheet()
+        self.maze = Maze(self)
 
         self.game_speed = 1.0
 
@@ -40,6 +44,9 @@ class Game:
     def start(self):
         self.level_manager.reset_game()
         maze_map = self.level_manager.get_level_map()
+
+        self.maze.get_maze(maze_map["maze_name"].split(".")[0])
+        self.maze.create_maze()
 
         game_folder = os.path.dirname(__file__)
         self.nodes = NodeGroup(os.path.join(game_folder, "mazes", maze_map["maze_name"]))
@@ -59,6 +66,10 @@ class Game:
     def start_new_level(self):
         level_map = self.level_manager.get_level_map()
         self.set_background()
+
+        maze_map = self.level_manager.get_level_map()
+        self.maze.get_maze(maze_map["maze_name"].split(".")[0])
+        self.maze.create_maze()
 
         game_folder = os.path.dirname(__file__)
         self.nodes = NodeGroup(os.path.join(game_folder, "mazes", level_map["maze_name"]))
@@ -105,6 +116,9 @@ class Game:
             self.pause.update()
             self.pellets.update(self.dt)
 
+        if self.pacman.death_animation:
+            self.pacman.update_death()
+
         self.text_manager.update_score(self.score)
         self.events()
         self.draw()
@@ -126,7 +140,7 @@ class Game:
 
     def draw(self):
         self.screen.blit(self.background, (0, 0))
-        self.nodes.draw(self.screen)
+        # self.nodes.draw(self.screen)
         self.pellets.draw(self.screen)
         self.pacman.draw()
         self.ghosts.draw()

@@ -1,5 +1,6 @@
 from sprites.character import Character
 from structures.stack import Stack
+from structures.animation import Animation
 from settings import *
 import random
 
@@ -31,6 +32,9 @@ class Ghost(Character):
         self.pellets_needed_for_release = 0
         self.released_from_house = True
         self.banned_directions = []
+
+        self.animation = None
+        self.animations = {}
 
     def set_up_initial_modes(self):
         modes = Stack()
@@ -77,6 +81,7 @@ class Ghost(Character):
         self.change_direction()
         self.move_constantly()
         self.portal_slow()
+        self.update_animation()
 
     def change_direction(self):
         if self.direction is STOP:
@@ -210,6 +215,75 @@ class Ghost(Character):
         if self.current_mode.name != GUIDE_MODE and self.current_mode.name != SPAWN_MODE:
             Character.reverse_direction(self)
 
+    def update_animation(self):
+        if self.current_mode.name == SPAWN_MODE:
+            if self.direction == UP:
+                self.animation = self.animations["spawnup"]
+            elif self.direction == DOWN:
+                self.animation = self.animations["spawndown"]
+            elif self.direction == LEFT:
+                self.animation = self.animations["spawnleft"]
+            elif self.direction == RIGHT:
+                self.animation = self.animations["spawnright"]
+        elif self.current_mode.name == SCATTER_MODE or self.current_mode.name == CHASE_MODE:
+            if self.direction == UP:
+                self.animation = self.animations["up"]
+            elif self.direction == DOWN:
+                self.animation = self.animations["down"]
+            elif self.direction == LEFT:
+                self.animation = self.animations["left"]
+            elif self.direction == RIGHT:
+                self.animation = self.animations["right"]
+        elif self.current_mode.name == FREIGHT_MODE:
+            if self.timer >= (self.current_mode.time * 0.7):
+                self.animation = self.animations["flash"]
+            else:
+                self.animation = self.animations["freight"]
+
+        self.image = self.animation.update()
+
+    def define_animations(self, ghost_number):
+        directions = ["up", "down", "left", "right"]
+
+        for image_number, direction in enumerate(directions):
+            self.create_move_animation(direction, image_number * 2, ghost_number)
+            self.create_spawn_animation(direction, image_number + 4)
+
+        self.create_freight_animation()
+        self.create_flash_animation()
+
+    def create_move_animation(self, direction, image_number, ghost_number):
+        animation = Animation(self.game, LOOP_ANIMATION_TYPE)
+        animation.animation_speed = GHOST_ANIMATION_SPEED
+        animation.add_frame(self.sprite_sheet.get_image_from_sheet(image_number, ghost_number, IMAGE_SIZE, IMAGE_SIZE))
+        animation.add_frame(self.sprite_sheet.get_image_from_sheet(image_number + 1, ghost_number,
+                                                                   IMAGE_SIZE, IMAGE_SIZE))
+        self.animations[direction] = animation
+
+    def create_spawn_animation(self, direction, image_number):
+        animation = Animation(self.game, STATIC_ANIMATION_TYPE)
+        animation.animation_speed = GHOST_ANIMATION_SPEED
+        animation.add_frame(self.sprite_sheet.get_image_from_sheet(image_number, 6, IMAGE_SIZE, IMAGE_SIZE))
+        self.animations["spawn" + direction] = animation
+
+    def create_freight_animation(self):
+        animation = Animation(self.game, LOOP_ANIMATION_TYPE)
+        animation.animation_speed = GHOST_ANIMATION_SPEED
+
+        for i in range(2):
+            animation.add_frame(self.sprite_sheet.get_image_from_sheet(i, 6, IMAGE_SIZE, IMAGE_SIZE))
+
+        self.animations["freight"] = animation
+
+    def create_flash_animation(self):
+        animation = Animation(self.game, LOOP_ANIMATION_TYPE)
+        animation.animation_speed = GHOST_ANIMATION_SPEED
+        animation.add_frame(self.sprite_sheet.get_image_from_sheet(0, 6, IMAGE_SIZE, IMAGE_SIZE))
+        animation.add_frame(self.sprite_sheet.get_image_from_sheet(2, 6, IMAGE_SIZE, IMAGE_SIZE))
+        animation.add_frame(self.sprite_sheet.get_image_from_sheet(1, 6, IMAGE_SIZE, IMAGE_SIZE))
+        animation.add_frame(self.sprite_sheet.get_image_from_sheet(3, 6, IMAGE_SIZE, IMAGE_SIZE))
+        self.animations["flash"] = animation
+
 
 class Blinky(Ghost):
     def __init__(self, game):
@@ -217,6 +291,9 @@ class Blinky(Ghost):
         self.name = "blinky"
         self.color = RED
         self.set_start_position(self.name)
+        self.image = self.sprite_sheet.get_image_from_sheet(4, 2, IMAGE_SIZE, IMAGE_SIZE)
+        self.define_animations(2)
+        self.animation = self.animations["left"]
 
 
 class Pinky(Ghost):
@@ -225,6 +302,9 @@ class Pinky(Ghost):
         self.name = "pinky"
         self.color = PINK
         self.set_start_position(self.name)
+        self.image = self.sprite_sheet.get_image_from_sheet(0, 3, IMAGE_SIZE, IMAGE_SIZE)
+        self.define_animations(3)
+        self.animation = self.animations["up"]
 
     def set_scatter_goal(self):
         self.goal = Vector2Dim()
@@ -239,6 +319,9 @@ class Inky(Ghost):
         self.name = "inky"
         self.color = TEAL
         self.set_start_position(self.name)
+        self.image = self.sprite_sheet.get_image_from_sheet(2, 4, IMAGE_SIZE, IMAGE_SIZE)
+        self.define_animations(4)
+        self.animation = self.animations["down"]
 
         self.banned_directions = [RIGHT]
         self.pellets_needed_for_release = 30
@@ -261,6 +344,9 @@ class Clyde(Ghost):
         self.name = "clyde"
         self.color = ORANGE
         self.set_start_position(self.name)
+        self.image = self.sprite_sheet.get_image_from_sheet(2, 5, IMAGE_SIZE, IMAGE_SIZE)
+        self.define_animations(5)
+        self.animation = self.animations["down"]
 
         self.banned_directions = [LEFT]
         self.pellets_needed_for_release = 60
