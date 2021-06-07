@@ -100,3 +100,4 @@ STATIC_ANIMATION_TYPE = "static"
 # Maze
 NUMBER_OF_MAZE_FRAGMENTS = 11
 MAZE_DIRECTORY = os.path.join(os.path.dirname(__file__), "mazes")
+FLASH_TIME = 0.25

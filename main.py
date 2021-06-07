@@ -17,6 +17,8 @@ class Game:
         pg.init()
         self.screen = pg.display.set_mode(SCREEN_SIZE, 0, 32)
         self.background = None
+        self.flash_background = None
+
         self.set_background()
         self.clock = pg.time.Clock()
         self.dt = 0
@@ -34,11 +36,13 @@ class Game:
         self.text_manager = TextGroup(self)
         self.sprite_sheet = SpriteSheet()
         self.maze = Maze(self)
+        self.background_flash_on = False
 
         self.game_speed = 1.0
 
     def set_background(self):
         self.background = pg.surface.Surface(SCREEN_SIZE).convert()
+        self.flash_background = pg.surface.Surface(SCREEN_SIZE).convert()
         self.background.fill(BLACK)
 
     def start(self):
@@ -63,6 +67,9 @@ class Game:
         self.text_manager.show_ready_text()
         self.text_manager.update_level(self.level_manager.level + 1)
 
+        self.maze.reset_maze()
+        self.background_flash_on = False
+
     def start_new_level(self):
         level_map = self.level_manager.get_level_map()
         self.set_background()
@@ -84,6 +91,8 @@ class Game:
         self.pause.force_pause(True)
 
         self.text_manager.update_level(self.level_manager.level + 1)
+        self.maze.reset_maze()
+        self.background_flash_on = False
 
     def reset_level_after_pacman_dies(self):
         self.pacman.reset()
@@ -91,6 +100,8 @@ class Game:
         self.fruit = None
         self.pause.force_pause(True)
         self.text_manager.show_ready_text()
+        self.maze.reset_maze()
+        self.background_flash_on = False
 
     def update(self):
         if not self.game_over:
@@ -118,6 +129,9 @@ class Game:
 
         if self.pacman.death_animation:
             self.pacman.update_death()
+
+        if self.background_flash_on:
+            self.maze.flash_maze()
 
         self.text_manager.update_score(self.score)
         self.events()
@@ -172,6 +186,7 @@ class Game:
                 self.pacman.visible = False
                 self.ghosts.hide()
                 self.pause.start_timer(3, PAUSE_CLEAR)
+                self.background_flash_on = True
 
     def check_ghost_events(self):
         self.ghosts.release_from_home()

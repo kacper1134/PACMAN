@@ -43,7 +43,7 @@ class NodeGroup:
         self.ghost_house_grid = GHOST_HOUSE
 
         self.stack_of_nodes = Stack()
-        self.portal_symbols = ["1"]
+        self.portal_symbols = ["1", "2"]
         self.node_symbols = [NODE_SYMBOL, HOUSE_SYMBOL, GHOST_SPAWN_SYMBOL, PACMAN_START_NODE,
                              BLINKY_START_NODE, INKY_START_NODE, CLYDE_START_NODE, FRUIT_SYMBOL] + self.portal_symbols
 
