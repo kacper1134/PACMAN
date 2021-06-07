@@ -181,7 +181,7 @@ class Pacman(Character):
 
     def create_death_animation(self):
         animation = Animation(self.game, ONCE_ANIMATION_TYPE)
-        animation.animation_speed = PACMAN_ANIMATION_SPEED // 3
+        animation.animation_speed = PACMAN_ANIMATION_DEATH_SPEED
         for i in range(11):
             animation.add_frame(self.sprite_sheet.get_image_from_sheet(i, 7, IMAGE_SIZE, IMAGE_SIZE))
         self.animations["death"] = animation

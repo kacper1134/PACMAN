@@ -92,6 +92,7 @@ IMAGE_SIZE = 32
 
 # Animation
 PACMAN_ANIMATION_SPEED = 15
+PACMAN_ANIMATION_DEATH_SPEED = 8
 GHOST_ANIMATION_SPEED = 10
 LOOP_ANIMATION_TYPE = "loop"
 ONCE_ANIMATION_TYPE = "once"
@@ -101,3 +102,12 @@ STATIC_ANIMATION_TYPE = "static"
 NUMBER_OF_MAZE_FRAGMENTS = 11
 MAZE_DIRECTORY = os.path.join(os.path.dirname(__file__), "mazes")
 FLASH_TIME = 0.25
+
+# Sound directory
+SOUND_DIRECTORY = os.path.join(os.path.dirname(__file__), "sound")
+BEGINNING_SOUND_FILE = "pacman_beginning.wav"
+CHOMP_SOUND_FILE = "pacman_chomp.wav"
+DEATH_SOUND_FILE = "pacman_death.wav"
+EAT_FRUIT_SOUND_FILE = "pacman_eatfruit.wav"
+EAT_GHOST_SOUND_FILE = "pacman_eatghost.wav"
+BACKGROUND_SOUND_FILE = "siren_1.wav"
