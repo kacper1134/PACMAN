@@ -22,25 +22,24 @@ class Game:
 
         self.set_background()
         self.clock = pg.time.Clock()
-        self.dt = 0
 
+        self.dt = 0
+        self.eaten_pellets = 0
         self.score = 0
 
         self.pacman = None
         self.nodes = None
         self.fruit = None
 
-        self.eaten_pellets = 0
-
-        self.pause = Pause(self, True)
+        self.pause_manager = Pause(self, True)
         self.level_manager = LevelManager()
         self.text_manager = TextGroup(self)
+        self.sound_manager = SoundManager(self)
         self.sprite_sheet = SpriteSheet()
         self.maze = Maze(self)
         self.background_flash_on = False
-        self.sound_manager = SoundManager(self)
-
-        self.game_speed = 1.0
+        self.game_speed = min(1.0 * NEXT_LEVEL_SPEED_MULTIPLICATION ** self.level_manager.level,
+                              MAXIMUM_GAME_SPEED)
 
     def set_background(self):
         self.background = pg.surface.Surface(SCREEN_SIZE).convert()
@@ -62,7 +61,7 @@ class Game:
 
         self.eaten_pellets = 0
         self.fruit = None
-        self.pause.force_pause(True)
+        self.pause_manager.force_pause(True)
         self.game_over = False
 
         self.score = 0
@@ -92,18 +91,21 @@ class Game:
 
         self.eaten_pellets = 0
         self.fruit = None
-        self.pause.force_pause(True)
+        self.pause_manager.force_pause(True)
 
         self.text_manager.update_level(self.level_manager.level + 1)
         self.maze.reset_maze()
         self.background_flash_on = False
+        
+        self.text_manager.show_ready_text()
+        self.sound_manager.play_beginning_sound()
 
     def reset_level_after_pacman_dies(self):
         self.sound_manager.play_beginning_sound()
         self.pacman.reset()
         self.ghosts = GhostGroup(self)
         self.fruit = None
-        self.pause.force_pause(True)
+        self.pause_manager.force_pause(True)
         self.text_manager.show_ready_text()
         self.maze.reset_maze()
         self.background_flash_on = False
@@ -112,9 +114,10 @@ class Game:
         if not self.game_over:
             self.dt = self.clock.tick(FPS) / 1000
 
-            if (self.pause.pause_type == PAUSE_CLEAR or self.pause.pause_type == PAUSE_DIE) and not self.pause.paused:
-                self.pause.settle_pause()
-            elif not self.pause.paused:
+            if (self.pause_manager.pause_type == PAUSE_CLEAR or self.pause_manager.pause_type == PAUSE_DIE) \
+                    and not self.pause_manager.paused:
+                self.pause_manager.settle_pause()
+            elif not self.pause_manager.paused:
                 self.pacman.update()
                 self.ghosts.update()
 
@@ -129,7 +132,7 @@ class Game:
                     self.text_manager.show_game_over_text()
 
             self.text_manager.update()
-            self.pause.update()
+            self.pause_manager.update()
             self.pellets.update(self.dt)
 
         if self.pacman.death_animation:
@@ -152,8 +155,8 @@ class Game:
                     self.start()
                 else:
                     if self.pacman.lives != 0:
-                        self.pause.change_player_pause()
-                        if self.pause.paused:
+                        self.pause_manager.change_player_pause()
+                        if self.pause_manager.paused:
                             self.text_manager.show_paused_text()
                         else:
                             self.text_manager.hide_all_messages()
@@ -191,7 +194,7 @@ class Game:
             if self.pellets.empty():
                 self.pacman.visible = False
                 self.ghosts.hide()
-                self.pause.start_timer(3, PAUSE_CLEAR)
+                self.pause_manager.start_timer(3, PAUSE_CLEAR)
                 self.background_flash_on = True
 
             self.sound_manager.play_chomp_sound()
@@ -207,14 +210,14 @@ class Game:
 
                 ghost.spawn_mode()
                 self.sound_manager.play_eatghost_sound()
-                self.pause.start_timer(1, PAUSE_GHOST)
+                self.pause_manager.start_timer(1, PAUSE_GHOST)
                 self.pacman.visible = False
                 ghost.visible = False
             elif ghost.current_mode.name == SCATTER_MODE or ghost.current_mode.name == CHASE_MODE:
                 self.pacman.lose_live()
                 self.sound_manager.play_death_sound()
                 self.ghosts.hide()
-                self.pause.start_timer(3, PAUSE_DIE)
+                self.pause_manager.start_timer(3, PAUSE_DIE)
 
     def check_fruit_events(self):
         if self.fruit:
@@ -232,14 +235,14 @@ class Game:
             self.text_manager.show_game_over_text()
         else:
             self.reset_level_after_pacman_dies()
-        self.pause.pause_type = None
+        self.pause_manager.pause_type = None
 
     def resolve_level_clear(self):
         self.level_manager.next_level()
         self.start_new_level()
-        self.pause.pause_type = None
-        self.game_speed = min(self.game_speed * NEXT_LEVEL_SPEED_MULTIPLICATION, MAXIMUM_CHARACTER_SPEED)
-        self.pacman.speed *= self.game_speed
+        self.pause_manager.pause_type = None
+        self.game_speed = min(self.game_speed * NEXT_LEVEL_SPEED_MULTIPLICATION ** self.level_manager.level,
+                              MAXIMUM_GAME_SPEED)
 
 
 if __name__ == "__main__":

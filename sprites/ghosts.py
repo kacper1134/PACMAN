@@ -154,7 +154,8 @@ class Ghost(Character):
                 else:
                     self.modes.push(GhostMode(name=self.current_mode.name))
 
-            self.current_mode = GhostMode(FREIGHT_MODE, time=7, mul=0.5)
+            self.current_mode = GhostMode(FREIGHT_MODE, time=GHOST_FREIGHT_MODE_TIME * GHOST_FREIGHT_MODE_MULTIPLIER **
+                                                             self.game.level_manager.level, mul=0.5)
             self.timer = 0
             self.reverse_direction()
 
